@@ -1,49 +1,37 @@
-body {
+body{
 
-font-family: Arial;
-background-color: #f4f4f4;
-margin: 20px;
-
+    font-family: Arial;
+    background: #0b0f1a;
+    color: white;
+    padding: 20px;
 }
 
-.container {
+.container{
 
-display: flex;
-gap: 40px;
-
+    display: flex;
+    gap: 20px;
 }
 
-.controls {
+.controls{
 
-background: white;
-padding: 20px;
-border-radius: 10px;
-box-shadow: 0 0 10px gray;
-
+    background: #11182b;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
 }
 
-canvas {
+canvas{
 
-background: white;
-border: 2px solid black;
-
+    background: black;
+    border: 1px solid white;
 }
 
-button {
+button{
 
-margin-top: 10px;
-padding: 10px;
-font-size: 14px;
-cursor: pointer;
-
-}
-
-pre {
-
-background: black;
-color: lime;
-padding: 10px;
-height: 200px;
-overflow: auto;
-
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+    background: cyan;
+    border: none;
+    cursor: pointer;
 }
