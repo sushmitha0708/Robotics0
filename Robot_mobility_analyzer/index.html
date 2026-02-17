@@ -1,18 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
-<meta charset="UTF-8">
-<title>Robot Mobility Analyzer</title>
-
-<link rel="stylesheet"
-href="https://pyscript.net/releases/2024.1.1/core.css">
-
-<script type="module"
-src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+<script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
 
 </head>
 
@@ -20,45 +12,18 @@ src="https://pyscript.net/releases/2024.1.1/core.js"></script>
 
 <h1>Robot Mobility Analyzer</h1>
 
-<div class="container">
+<label>Links:</label>
+<input type="number" id="links" value="4"><br>
 
-<div class="controls">
+<label>Joints:</label>
+<input type="number" id="joints" value="3"><br>
 
-<label>Links (N)</label>
-<input type="number" id="links" value="4">
+<label>Loops:</label>
+<input type="number" id="loops" value="0"><br>
 
-<label>Joints (J)</label>
-<input type="number" id="joints" value="3">
-
-<label>Loops (L)</label>
-<input type="number" id="loops" value="0">
-
-<label>System Type</label>
-
-<select id="system">
-<option value="Planar">Planar</option>
-<option value="Spatial">Spatial</option>
-</select>
-
-<button py-click="create_joints()">Create Joints</button>
-
-<div id="joint-container"></div>
-
-<button py-click="analyze()">Analyze Mobility</button>
-
-</div>
-
-<div>
-
-<canvas id="robotCanvas"
-width="700"
-height="400"></canvas>
+<button py-click="analyze()">Analyze</button>
 
 <pre id="output"></pre>
-
-</div>
-
-</div>
 
 <py-script src="mobility.py"></py-script>
 
