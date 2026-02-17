@@ -1,388 +1,228 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+from pyscript import document
 import math
 
-# ============================================
-# Constants
-# ============================================
-
 JOINT_DOF = {
-    "R": 1,
-    "P": 1,
-    "H": 1,
-    "S": 3,
-    "U": 2,
-    "C": 2
+
+"R": 1,
+"P": 1,
+"H": 1,
+"S": 3,
+"U": 2,
+"C": 2
+
 }
 
 JOINT_CONSTRAINTS = {
-    "R": 5,
-    "P": 5,
-    "H": 5,
-    "S": 3,
-    "U": 4,
-    "C": 4
+
+"R": 5,
+"P": 5,
+"H": 5,
+"S": 3,
+"U": 4,
+"C": 4
+
 }
 
 RIGID_BODY_DOF = {
-    "Planar": 3,
-    "Spatial": 6
+
+"Planar": 3,
+"Spatial": 6
+
 }
 
 LINK_LENGTH = 80
 
 
-# ============================================
-# Main GUI
-# ============================================
+# canvas
+canvas = document.getElementById("robotCanvas")
+ctx = canvas.getContext("2d")
 
-class MobilityAnalyzer:
 
-    def __init__(self, root):
+joint_types = []
 
-        self.root = root
 
-        # Fixed window size
-        self.root.title("Robot Mobility Analyzer")
-        self.root.geometry("1000x700")
-        self.root.resizable(False, False)
+def create_joints():
 
-        self.joint_dropdowns = []
+    container = document.getElementById("joint-container")
 
-        self.create_layout()
+    container.innerHTML = ""
 
+    J = int(document.getElementById("joints").value)
 
-    # ============================================
-    # Layout
-    # ============================================
+    global joint_types
 
-    def create_layout(self):
+    joint_types = ["R"] * J
 
-        main_frame = tk.Frame(self.root)
-        main_frame.pack(fill="both", expand=True)
+    for i in range(J):
 
+        select = document.createElement("select")
 
-        # LEFT PANEL
-        left = tk.Frame(main_frame, width=350)
-        left.pack(side="left", fill="y", padx=10)
+        for jt in JOINT_DOF:
 
-        title = tk.Label(left,
-                         text="Mobility Input",
-                         font=("Arial", 16, "bold"))
-        title.pack(pady=10)
+            option = document.createElement("option")
+            option.text = jt
+            select.add(option)
 
+        select.onchange = lambda e, i=i: update_joint(i, e)
 
-        tk.Label(left, text="Links (N)").pack()
-        self.links_entry = tk.Entry(left)
-        self.links_entry.pack()
+        container.appendChild(select)
 
-        tk.Label(left, text="Joints (J)").pack()
-        self.joints_entry = tk.Entry(left)
-        self.joints_entry.pack()
+    draw_robot()
 
-        tk.Label(left, text="Loops (L)").pack()
-        self.loops_entry = tk.Entry(left)
-        self.loops_entry.insert(0, "0")
-        self.loops_entry.pack()
 
+def update_joint(i, event):
 
-        tk.Label(left, text="System Type").pack()
+    joint_types[i] = event.target.value
 
-        self.type_combo = ttk.Combobox(
-            left,
-            values=["Planar", "Spatial"],
-            state="readonly"
-        )
-        self.type_combo.current(0)
-        self.type_combo.pack()
+    draw_robot()
 
 
-        tk.Button(left,
-                  text="Create Robot",
-                  command=self.create_joints,
-                  bg="blue",
-                  fg="white").pack(pady=10)
+def draw_robot():
 
+    ctx.clearRect(0,0,700,400)
 
-        tk.Button(left,
-                  text="Analyze Mobility",
-                  command=self.analyze,
-                  bg="green",
-                  fg="white").pack(pady=10)
+    system = document.getElementById("system").value
 
+    if system == "Planar":
 
-        # Joint list frame
-        self.joint_frame = tk.Frame(left)
-        self.joint_frame.pack()
+        link_color = "blue"
+        frame_color = "green"
 
+    else:
 
-        # RIGHT PANEL
-        right = tk.Frame(main_frame)
-        right.pack(side="right", fill="both", expand=True)
+        link_color = "purple"
+        frame_color = "red"
 
+    x = 100
+    y = 200
 
-        # Canvas
-        self.canvas = tk.Canvas(
-            right,
-            width=600,
-            height=400,
-            bg="white"
-        )
-        self.canvas.pack(pady=10)
+    # base
+    ctx.fillRect(x-20,y-20,20,40)
 
+    for jt in joint_types:
 
-        # Explanation panel
-        self.explain = tk.Text(
-            right,
-            height=15,
-            width=70,
-            font=("Consolas", 10)
-        )
-        self.explain.pack()
+        x_new = x + LINK_LENGTH
 
+        # link
+        ctx.strokeStyle = link_color
+        ctx.lineWidth = 4
 
-    # ============================================
-    # Create joints
-    # ============================================
+        ctx.beginPath()
+        ctx.moveTo(x,y)
+        ctx.lineTo(x_new,y)
+        ctx.stroke()
 
-    def create_joints(self):
+        # joint
+        draw_joint(x,y,jt)
 
-        for widget in self.joint_frame.winfo_children():
-            widget.destroy()
+        # frame
+        draw_frame(x,y,frame_color)
 
-        self.joint_dropdowns.clear()
+        x = x_new
 
-        try:
-            J = int(self.joints_entry.get())
-        except:
-            return
+    # workspace
+    radius = LINK_LENGTH * len(joint_types)
 
-        for i in range(J):
+    ctx.strokeStyle = "gray"
+    ctx.setLineDash([5,5])
 
-            frame = tk.Frame(self.joint_frame)
-            frame.pack()
+    ctx.beginPath()
+    ctx.arc(100,200,radius,0,math.pi*2)
+    ctx.stroke()
 
-            tk.Label(frame, text=f"Joint {i+1}").pack(side="left")
+    ctx.setLineDash([])
 
-            combo = ttk.Combobox(
-                frame,
-                values=list(JOINT_DOF.keys()),
-                state="readonly",
-                width=5
-            )
 
-            combo.current(0)
-            combo.pack(side="left")
+def draw_joint(x,y,jt):
 
-            combo.bind("<<ComboboxSelected>>",
-                       lambda e: self.draw())
+    ctx.strokeStyle = "black"
 
-            self.joint_dropdowns.append(combo)
+    if jt == "R":
 
-        self.draw()
+        ctx.beginPath()
+        ctx.arc(x,y,8,0,math.pi*2)
+        ctx.stroke()
 
+    elif jt == "P":
 
-    # ============================================
-    # Draw robot with coordinate frames
-    # ============================================
+        ctx.strokeRect(x-8,y-8,16,16)
 
-    def draw(self):
+    elif jt == "S":
 
-        self.canvas.delete("all")
+        ctx.beginPath()
+        ctx.arc(x,y,8,0,math.pi*2)
+        ctx.fill()
 
-        system = self.type_combo.get()
+    elif jt == "U":
 
-        if system == "Planar":
-            link_color = "blue"
-            frame_color = "green"
-        else:
-            link_color = "purple"
-            frame_color = "red"
+        ctx.beginPath()
+        ctx.moveTo(x-10,y)
+        ctx.lineTo(x+10,y)
+        ctx.moveTo(x,y-10)
+        ctx.lineTo(x,y+10)
+        ctx.stroke()
 
-        x = 100
-        y = 200
+    elif jt == "C":
 
-        # Base
-        self.canvas.create_rectangle(
-            x-20, y-20, x, y+20,
-            fill="black")
+        ctx.strokeRect(x-8,y-8,16,16)
+        ctx.beginPath()
+        ctx.arc(x,y,5,0,math.pi*2)
+        ctx.stroke()
 
-        for joint in self.joint_dropdowns:
 
-            joint_type = joint.get()
+def draw_frame(x,y,color):
 
-            x_new = x + LINK_LENGTH
+    ctx.strokeStyle = color
 
-            # Link
-            self.canvas.create_line(
-                x, y, x_new, y,
-                width=4,
-                fill=link_color
-            )
+    ctx.beginPath()
 
-            # Joint symbol
-            self.draw_joint(x, y, joint_type)
+    ctx.moveTo(x,y)
+    ctx.lineTo(x+20,y)
 
-            # Coordinate frame
-            self.draw_frame(x, y, frame_color)
+    ctx.moveTo(x,y)
+    ctx.lineTo(x,y-20)
 
-            x = x_new
+    ctx.stroke()
 
-        # End effector
-        self.canvas.create_oval(
-            x-6, y-6, x+6, y+6,
-            fill="red")
 
-        self.draw_workspace(x, y)
+def analyze():
 
+    N = int(document.getElementById("links").value)
+    J = int(document.getElementById("joints").value)
+    L = int(document.getElementById("loops").value)
 
-    # ============================================
-    # Draw coordinate frame
-    # ============================================
+    system = document.getElementById("system").value
 
-    def draw_frame(self, x, y, color):
+    m = RIGID_BODY_DOF[system]
 
-        size = 20
+    f_sum = sum(JOINT_DOF[j] for j in joint_types)
 
-        self.canvas.create_line(
-            x, y,
-            x+size, y,
-            arrow=tk.LAST,
-            fill=color)
+    constraint_sum = sum(JOINT_CONSTRAINTS[j] for j in joint_types)
 
-        self.canvas.create_line(
-            x, y,
-            x, y-size,
-            arrow=tk.LAST,
-            fill=color)
+    M = m*(N-1-J) + f_sum - m*L
 
-        self.canvas.create_text(
-            x+size+10, y,
-            text="x",
-            fill=color)
+    output = document.getElementById("output")
 
-        self.canvas.create_text(
-            x, y-size-10,
-            text="y",
-            fill=color)
+    output.innerText = f"""
 
+GRÜBLER–KUTZBACH ANALYSIS
 
-    # ============================================
-    # Draw workspace boundary
-    # ============================================
+System: {system}
 
-    def draw_workspace(self, x, y):
+Links: {N}
+Joints: {J}
+Loops: {L}
 
-        radius = LINK_LENGTH * len(self.joint_dropdowns)
+Joint DOF Sum: {f_sum}
 
-        self.canvas.create_oval(
-            100-radius,
-            200-radius,
-            100+radius,
-            200+radius,
-            dash=(4,2),
-            outline="gray"
-        )
+Constraints: {constraint_sum}
 
-        self.canvas.create_text(
-            100,
-            200-radius-10,
-            text="Workspace Boundary"
-        )
+Mobility Equation:
 
+M = m(N−1−J) + Σf − mL
 
-    # ============================================
-    # Draw joint symbols
-    # ============================================
+M = {m}({N}-1-{J}) + {f_sum} − {m}({L})
 
-    def draw_joint(self, x, y, joint):
+Mobility = {M}
 
-        if joint == "R":
-            self.canvas.create_oval(x-8,y-8,x+8,y+8)
-
-        elif joint == "P":
-            self.canvas.create_rectangle(x-8,y-8,x+8,y+8)
-
-        elif joint == "S":
-            self.canvas.create_oval(x-8,y-8,x+8,y+8, fill="black")
-
-        elif joint == "U":
-            self.canvas.create_line(x-10,y,x+10,y)
-            self.canvas.create_line(x,y-10,x,y+10)
-
-        elif joint == "C":
-            self.canvas.create_rectangle(x-8,y-8,x+8,y+8)
-            self.canvas.create_oval(x-5,y-5,x+5,y+5)
-
-        elif joint == "H":
-            self.canvas.create_oval(x-8,y-8,x+8,y+8)
-
-
-    # ============================================
-    # Analyze mobility
-    # ============================================
-
-    def analyze(self):
-
-        try:
-
-            N = int(self.links_entry.get())
-            J = int(self.joints_entry.get())
-            L = int(self.loops_entry.get())
-
-            system = self.type_combo.get()
-
-            m = RIGID_BODY_DOF[system]
-
-            f_sum = sum(
-                JOINT_DOF[j.get()]
-                for j in self.joint_dropdowns
-            )
-
-            constraint_sum = sum(
-                JOINT_CONSTRAINTS[j.get()]
-                for j in self.joint_dropdowns
-            )
-
-            M = m*(N-1-J) + f_sum - m*L
-
-            # Explanation
-            text = ""
-
-            text += "GRÜBLER–KUTZBACH MOBILITY ANALYSIS\n"
-            text += "----------------------------------\n\n"
-
-            text += f"System type: {system}\n"
-            text += f"Rigid body DOF (m): {m}\n\n"
-
-            text += f"Links (N): {N}\n"
-            text += f"Joints (J): {J}\n"
-            text += f"Loops (L): {L}\n\n"
-
-            text += f"Sum of joint DOF: {f_sum}\n"
-            text += f"Total constraints: {constraint_sum}\n\n"
-
-            text += "Mobility equation:\n"
-            text += f"M = m(N-1-J) + Σf - mL\n\n"
-
-            text += f"M = {m}({N}-1-{J}) + {f_sum} - {m}({L})\n\n"
-
-            text += f"M = {M}\n"
-
-            self.explain.delete("1.0", tk.END)
-            self.explain.insert(tk.END, text)
-
-        except Exception as e:
-
-            messagebox.showerror("Error", str(e))
-
-
-# ============================================
-# Run
-# ============================================
-
-root = tk.Tk()
-
-app = MobilityAnalyzer(root)
-
-root.mainloop()
+"""
