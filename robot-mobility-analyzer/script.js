@@ -1,5 +1,20 @@
 console.log("script loaded")
 
+function getPositiveInteger(id, minValue=1){
+
+    const value =
+        Number(document.getElementById(id).value)
+
+    if(!Number.isInteger(value) || value < minValue){
+
+        alert(`${id.toUpperCase()} must be an integer ≥ ${minValue}`)
+
+        throw new Error("Invalid input")
+    }
+
+    return value
+}
+
 function createJoints(){
 
     const container =
@@ -25,8 +40,10 @@ function createJoints(){
 
 function analyze(){
 
-    const N =
-        parseInt(document.getElementById("links").value)
+const N = getPositiveInteger("links",1)
+const J = getPositiveInteger("joints",1)
+const L = getPositiveInteger("loops",0)
+
 
     drawRobot(N)
 
