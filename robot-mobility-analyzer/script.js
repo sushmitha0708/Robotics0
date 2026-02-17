@@ -109,22 +109,29 @@ function drawRobot(N){
     const ctx =
         canvas.getContext("2d")
 
-    ctx.clearRect(0,0,700,400)
+    // Clear canvas
+    ctx.clearRect(0,0,canvas.width,canvas.height)
 
-    const spacing = 100
-    const y = 200
+    const spacing = canvas.width/(N+1)
+    const y = canvas.height/2
 
+    ctx.lineWidth = 3
+    ctx.strokeStyle = "cyan"
+    ctx.fillStyle = "yellow"
+
+    // Draw links
     ctx.beginPath()
 
     for(let i=0;i<N;i++){
 
-        const x = 50 + i*spacing
+        const x = spacing*(i+1)
 
-        ctx.arc(x,y,10,0,2*Math.PI)
+        if(i===0){
 
-        if(i>0){
+            ctx.moveTo(x,y)
 
-            ctx.moveTo(x-spacing,y)
+        }else{
+
             ctx.lineTo(x,y)
 
         }
@@ -132,5 +139,29 @@ function drawRobot(N){
     }
 
     ctx.stroke()
+
+    // Draw joints
+    for(let i=0;i<N;i++){
+
+        const x = spacing*(i+1)
+
+        ctx.beginPath()
+
+        ctx.arc(x,y,8,0,2*Math.PI)
+
+        ctx.fill()
+
+        ctx.stroke()
+
+    }
+
+}
+
+window.onload = function(){
+
+    const N =
+        parseInt(document.getElementById("links").value)
+
+    drawRobot(N)
 
 }
