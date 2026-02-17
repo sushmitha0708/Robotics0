@@ -1,188 +1,48 @@
 from pyscript import document
 import math
 
+# Joint DOF table
 JOINT_DOF = {
-
-"R": 1,
-"P": 1,
-"H": 1,
-"S": 3,
-"U": 2,
-"C": 2
-
+    "R": 1,
+    "P": 1,
+    "H": 1,
+    "C": 2,
+    "U": 2,
+    "S": 3
 }
 
-JOINT_CONSTRAINTS = {
-
-"R": 5,
-"P": 5,
-"H": 5,
-"S": 3,
-"U": 4,
-"C": 4
-
+SYSTEM_DOF = {
+    "Planar": 3,
+    "Spatial": 6
 }
-
-RIGID_BODY_DOF = {
-
-"Planar": 3,
-"Spatial": 6
-
-}
-
-LINK_LENGTH = 80
-
-
-# canvas
-canvas = document.getElementById("robotCanvas")
-ctx = canvas.getContext("2d")
-
 
 joint_types = []
-
 
 def create_joints():
 
     container = document.getElementById("joint-container")
-
     container.innerHTML = ""
 
     J = int(document.getElementById("joints").value)
 
     global joint_types
-
-    joint_types = ["R"] * J
+    joint_types = []
 
     for i in range(J):
 
-        select = document.createElement("select")
+        select_html = f"""
+        <label>Joint {i+1}</label>
+        <select id="joint{i}">
+            <option value="R">Revolute</option>
+            <option value="P">Prismatic</option>
+            <option value="H">Helical</option>
+            <option value="C">Cylindrical</option>
+            <option value="U">Universal</option>
+            <option value="S">Spherical</option>
+        </select>
+        """
 
-        for jt in JOINT_DOF:
-
-            option = document.createElement("option")
-            option.text = jt
-            select.add(option)
-
-        select.onchange = lambda e, i=i: update_joint(i, e)
-
-        container.appendChild(select)
-
-    draw_robot()
-
-
-def update_joint(i, event):
-
-    joint_types[i] = event.target.value
-
-    draw_robot()
-
-
-def draw_robot():
-
-    ctx.clearRect(0,0,700,400)
-
-    system = document.getElementById("system").value
-
-    if system == "Planar":
-
-        link_color = "blue"
-        frame_color = "green"
-
-    else:
-
-        link_color = "purple"
-        frame_color = "red"
-
-    x = 100
-    y = 200
-
-    # base
-    ctx.fillRect(x-20,y-20,20,40)
-
-    for jt in joint_types:
-
-        x_new = x + LINK_LENGTH
-
-        # link
-        ctx.strokeStyle = link_color
-        ctx.lineWidth = 4
-
-        ctx.beginPath()
-        ctx.moveTo(x,y)
-        ctx.lineTo(x_new,y)
-        ctx.stroke()
-
-        # joint
-        draw_joint(x,y,jt)
-
-        # frame
-        draw_frame(x,y,frame_color)
-
-        x = x_new
-
-    # workspace
-    radius = LINK_LENGTH * len(joint_types)
-
-    ctx.strokeStyle = "gray"
-    ctx.setLineDash([5,5])
-
-    ctx.beginPath()
-    ctx.arc(100,200,radius,0,math.pi*2)
-    ctx.stroke()
-
-    ctx.setLineDash([])
-
-
-def draw_joint(x,y,jt):
-
-    ctx.strokeStyle = "black"
-
-    if jt == "R":
-
-        ctx.beginPath()
-        ctx.arc(x,y,8,0,math.pi*2)
-        ctx.stroke()
-
-    elif jt == "P":
-
-        ctx.strokeRect(x-8,y-8,16,16)
-
-    elif jt == "S":
-
-        ctx.beginPath()
-        ctx.arc(x,y,8,0,math.pi*2)
-        ctx.fill()
-
-    elif jt == "U":
-
-        ctx.beginPath()
-        ctx.moveTo(x-10,y)
-        ctx.lineTo(x+10,y)
-        ctx.moveTo(x,y-10)
-        ctx.lineTo(x,y+10)
-        ctx.stroke()
-
-    elif jt == "C":
-
-        ctx.strokeRect(x-8,y-8,16,16)
-        ctx.beginPath()
-        ctx.arc(x,y,5,0,math.pi*2)
-        ctx.stroke()
-
-
-def draw_frame(x,y,color):
-
-    ctx.strokeStyle = color
-
-    ctx.beginPath()
-
-    ctx.moveTo(x,y)
-    ctx.lineTo(x+20,y)
-
-    ctx.moveTo(x,y)
-    ctx.lineTo(x,y-20)
-
-    ctx.stroke()
+        container.innerHTML += select_html
 
 
 def analyze():
@@ -192,37 +52,63 @@ def analyze():
     L = int(document.getElementById("loops").value)
 
     system = document.getElementById("system").value
+    m = SYSTEM_DOF[system]
 
-    m = RIGID_BODY_DOF[system]
+    f_sum = 0
 
-    f_sum = sum(JOINT_DOF[j] for j in joint_types)
+    for i in range(J):
 
-    constraint_sum = sum(JOINT_CONSTRAINTS[j] for j in joint_types)
+        joint = document.getElementById(f"joint{i}").value
+        f_sum += JOINT_DOF[joint]
 
-    M = m*(N-1-J) + f_sum - m*L
+    # Kutzbach criterion with loop correction
+    mobility = m*(N - 1 - J) + f_sum - m*L
 
-    output = document.getElementById("output")
+    constraints = m*J - f_sum
 
-    output.innerText = f"""
+    output = f"""
+SYSTEM: {system}
 
-GRÜBLER–KUTZBACH ANALYSIS
+Mobility (DOF): {mobility}
 
-System: {system}
+Constraints: {constraints}
 
-Links: {N}
-Joints: {J}
-Loops: {L}
+Formula:
+M = m(N − 1 − J) + Σf − mL
 
-Joint DOF Sum: {f_sum}
+Substitution:
+M = {m}({N}-1-{J}) + {f_sum} − {m}×{L}
 
-Constraints: {constraint_sum}
-
-Mobility Equation:
-
-M = m(N−1−J) + Σf − mL
-
-M = {m}({N}-1-{J}) + {f_sum} − {m}({L})
-
-Mobility = {M}
-
+Result:
+M = {mobility}
 """
+
+    document.getElementById("output").innerText = output
+
+    draw_robot(N)
+
+
+def draw_robot(N):
+
+    canvas = document.getElementById("robotCanvas")
+    ctx = canvas.getContext("2d")
+
+    ctx.clearRect(0,0,700,400)
+
+    x = 50
+    y = 200
+
+    spacing = 100
+
+    ctx.beginPath()
+
+    for i in range(N):
+
+        ctx.arc(x+i*spacing, y, 10, 0, 2*math.pi)
+        ctx.fill()
+
+        if i > 0:
+            ctx.moveTo(x+(i-1)*spacing, y)
+            ctx.lineTo(x+i*spacing, y)
+
+    ctx.stroke()
