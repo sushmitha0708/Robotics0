@@ -1,0 +1,49 @@
+body {
+
+font-family: Arial;
+background-color: #f4f4f4;
+margin: 20px;
+
+}
+
+.container {
+
+display: flex;
+gap: 40px;
+
+}
+
+.controls {
+
+background: white;
+padding: 20px;
+border-radius: 10px;
+box-shadow: 0 0 10px gray;
+
+}
+
+canvas {
+
+background: white;
+border: 2px solid black;
+
+}
+
+button {
+
+margin-top: 10px;
+padding: 10px;
+font-size: 14px;
+cursor: pointer;
+
+}
+
+pre {
+
+background: black;
+color: lime;
+padding: 10px;
+height: 200px;
+overflow: auto;
+
+}
