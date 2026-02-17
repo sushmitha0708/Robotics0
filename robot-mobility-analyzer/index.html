@@ -17,10 +17,14 @@
 <div class="controls">
 
 <label>Links (N)</label>
-<input type="number" id="links" value="4">
+<input type="number" id="links" value="4" min="1" step="1">
 
 <label>Joints (J)</label>
-<input type="number" id="joints" value="3">
+<input type="number" id="joints" value="3" min="1" step="1">
+
+<label>Loops (L)</label>
+<input type="number" id="loops" value="0" min="0" step="1">
+
 
 <button onclick="createJoints()">Create Joints</button>
 
