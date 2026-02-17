@@ -1,129 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Robot Mobility Analyzer</title>
-
-<!-- PyScript -->
 <link rel="stylesheet"
-href="https://pyscript.net/releases/2024.1.1/core.css">
+href="https://pyscript.net/latest/pyscript.css">
 
-<script type="module"
-src="https://pyscript.net/releases/2024.1.1/core.js"></script>
-
-<!-- Your custom CSS -->
-<link rel="stylesheet" href="style.css">
-
-<style>
-body{
-    font-family: Arial;
-    background: #0b0f1a;
-    color: white;
-    margin: 0;
-    padding: 20px;
-}
-
-.container{
-    display: flex;
-    gap: 20px;
-}
-
-.controls{
-    background: #11182b;
-    padding: 20px;
-    border-radius: 10px;
-    width: 300px;
-}
-
-canvas{
-    background: black;
-    border: 1px solid white;
-}
-
-input, select, button{
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 5px;
-}
-
-button{
-    background: #00c3ff;
-    border: none;
-    color: black;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-button:hover{
-    background: #00ffaa;
-}
-
-pre{
-    background: #111;
-    padding: 10px;
-    margin-top: 10px;
-}
-</style>
+<script defer
+src="https://pyscript.net/latest/pyscript.js"></script>
 
 </head>
 
 <body>
 
-<h1>Robot Mobility Analyzer</h1>
+<h1>Test</h1>
 
-<div class="container">
+<button py-click="hello()">Click</button>
 
-<!-- LEFT PANEL -->
-<div class="controls">
-
-<label>Links (N)</label>
-<input type="number" id="links" value="4">
-
-<label>Joints (J)</label>
-<input type="number" id="joints" value="3">
-
-<label>Loops (L)</label>
-<input type="number" id="loops" value="0">
-
-<label>System Type</label>
-<select id="system">
-<option value="Planar">Planar</option>
-<option value="Spatial">Spatial</option>
-</select>
-
-<button py-click="create_joints()">
-Create Joints
-</button>
-
-<div id="joint-container"></div>
-
-<button py-click="analyze()">
-Analyze Mobility
-</button>
-
-</div>
-
-<!-- RIGHT PANEL -->
-<div>
-
-<canvas id="robotCanvas"
-width="700"
-height="400">
-</canvas>
-
-<pre id="output">
-Results will appear here...
-</pre>
-
-</div>
-
-</div>
-
-<!-- Load your Python code -->
-<py-script src="mobility.py"></py-script>
+<py-script>
+def hello():
+    print("Working!")
+</py-script>
 
 </body>
 </html>
